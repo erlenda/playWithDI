@@ -1,21 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿#define DEBUG
 
 using System;
 using NUnit.Framework;
 using StructureMap;
 
-namespace ConsoleApplication1
+namespace DependencyInjectionWithAndWithoutStructureMap
 {
+    [TestFixture]
+    class TestManualDependencies
+    {
+        private IReturnOutput _returnOutput;
+
+        [Test]
+        public void TestNorwegianGreeting()
+        {
+            _returnOutput = new DebugOutputDisplay(new NorwegianGreeter());
+            var messageReturned = _returnOutput.PrintGreetingAndReturnIt();
+            const string expect = "Hei";
+            Assert.AreEqual(messageReturned, expect, "Expected a norwegian greeting ({0}) but instead got {1}. ", expect, messageReturned);
+        }
+
+        [Test]
+        public void TestFrenchGreeting()
+        {
+            _returnOutput = new DebugOutputDisplay(new FrenchGreeter());
+            var messageReturned = _returnOutput.PrintGreetingAndReturnIt();
+            const string expect = "Bonjour";
+            Assert.AreEqual(messageReturned, expect, "Expected a french greeting ({0}) but instead got {1}. ", expect, messageReturned);
+        }
+    }
+    
     class Program
     {
         private static void Main(string[] args)
         {
             IContainer container = ConfigureDependencies();
-
             IAppEngine appEngine = container.GetInstance<IAppEngine>();
             appEngine.Run();
         }
@@ -45,6 +64,23 @@ namespace ConsoleApplication1
         public void Run()
         {
             outputDisplay.Show(greeter.GetGreeting());
+        }
+    }
+
+    public class AppEngineTest : IAppEngine
+    {
+        private readonly IGreeter _greeter;
+        private readonly IOutputDisplay _output;
+
+        public AppEngineTest(IGreeter greeter, IOutputDisplay output)
+        {
+            this._greeter = greeter;
+            this._output = output;
+        }
+
+        public void Run()
+        {
+            _output.Show(_greeter.GetGreeting());
         }
     }
 
@@ -87,30 +123,34 @@ namespace ConsoleApplication1
         void Show(string message);
     }
 
+    public interface IReturnOutput
+    {
+        string PrintGreetingAndReturnIt();
+    }
+
     public class ConsoleOutputDisplay : IOutputDisplay
     {
         public void Show(string message)
         {
-            Console.WriteLine(message);
-            
-        }
-    }
-
-    [TestFixture]
-    public class TestOutputDisplay : IOutputDisplay 
-    {
-        
-        [TestFixtureSetUp]
-        public void TestFixtureSetup()
-        {
-            
-        }
-        [Test]
-        public void Show(string message)
-        {
-            Assert.AreEqual(message, "Hei");
             System.Diagnostics.Debug.WriteLine(message);
+            Console.WriteLine(message);
         }
     }
 
+    public class DebugOutputDisplay : IReturnOutput
+    {
+        public IGreeter Greeter;
+
+        public DebugOutputDisplay(IGreeter greeter)
+        {
+            this.Greeter = greeter;
+        }
+
+        public string PrintGreetingAndReturnIt()
+        {
+            Console.WriteLine(Greeter.GetGreeting());
+            System.Diagnostics.Debug.WriteLine(Greeter.GetGreeting());
+            return this.Greeter.GetGreeting();
+        }
+    }
 }
