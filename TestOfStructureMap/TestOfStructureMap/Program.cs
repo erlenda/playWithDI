@@ -4,7 +4,7 @@ using System;
 using NUnit.Framework;
 using StructureMap;
 
-namespace DependencyInjectionWithAndWithoutStructureMap
+namespace DependencyInjection
 {
     [TestFixture]
     class TestManualDependencies
@@ -30,7 +30,7 @@ namespace DependencyInjectionWithAndWithoutStructureMap
         }
     }
     
-    class Program
+    class StructureMapResolverExample
     {
         private static void Main(string[] args)
         {
